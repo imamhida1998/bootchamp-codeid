@@ -1,0 +1,137 @@
+Final Test:
+
+CODE.ID ingin mengembangkan bisnis Virtual Account supaya pengguna dapat menggunakan saldo virtual ke berbagai pedagang.
+Adapun beberapa fungsi yang menjadi requirements pembuatan system Virtual Account ini.
+
+Use Cases
+-Register Account. Informasi berupa (no. hp, nama, password, PIN).
+-No Virtual Account dibuat berdasarkan no.hp + dan nomor urut terakhir dari anggota yang mendaftar
+Misalnya: 081219972047-00001 (1 adalah no urut pertama, dipadding left ke kiri 5 digit panjang keseluruhan)
+
+-Login, ke account berdasarkan no.Hp dan Password
+-Logout dari account
+
+-Melihat info Nama, No.Hp, dan Saldo
+-Melakukan Top Up dari Bank Account (Top Up ID, no. bank account, bank code, top-up amount, No.Virtual Account)
+-Validasi jika dest.Account tidak valid
+-Top Up ID digenerate dari UUID
+-Melakukan Transfer Antar nomor virtual account (Transfer ID, src.account, dest.account, transfer amount)
+-Validasi jika amount tidak cukup
+-Validasi jika dest.Account tidak valid
+-Transfer ID digenerate dari UUID
+-Melakukan Transaksi Pay ke merchant (Pay ID, Merchant Account, Merchant Name, Src.Account, Pay Amount)
+-Validasi jika Pay amount tidak cukup
+-Validasi jika Merchant account dan Src.Account tidak valid
+-Transfer ID digenerate dari UUID
+-Dapat melihat histori transaksi baik berupa Top Up, Transfer, maupun Pay
+-Validasi Saldo Bank Account
+-Potong Saldo Bank Account
+
+Tables:
+-VirtualAccount (postgre) {
+    account_no (PK),
+    no_hp,
+    email,
+    account_name (allow update)
+    pin, (allow update)
+    passwd,
+    saldo,
+    seq_no,
+    created_at,
+    updated_at,    
+}
+
+-Login (mongodb) {
+    login_id,
+    token,
+    account_no,
+    created_at,
+    expired,
+    expired_time
+}
+
+-TopUp (mongodb) {
+    top_id,
+    bank_code,
+    bank_name,
+    va_account_no,
+    va_account_name,
+    top_up_amount,
+    created_at,
+}
+
+-Transfer (mongodb) {
+    transfer_id,
+    src_va_account_no,
+    src_va_account_name,
+    dest_va_account_no,
+    dest_va_account_name,
+    transfer_amount,
+    created_at,
+}
+
+-Pay (mongodb) {
+    pay_id,
+    merchant_va_account_no,
+    merchant_va_account_name,
+    src_va_account_no,
+    src_va_account_name,
+    pay_amount,
+    created_at,
+}
+
+
+-VirtualAccountTransaction (mongodb) {
+    history_id,
+    va_account_no,
+    va_account_name,
+    transaction_amount,
+    transaction_type,
+    description,
+    transaction_id
+}
+
+-BankAccount (Postgre) {
+    bank_account_no,
+    bank_account_owner,
+    saldo,
+    created_at
+}
+
+-BankTransaction (mongodb) {
+    transaction_id,
+    bank_account_no,
+    bank_account_owner,
+    transaction_amount, (-/+)
+    reference (va_account_no + "|" + va_account_name)
+} 
+
+
+Tasks:
+-Buatkan API Virtual Account untuk masing-masing fungsi diatas. Minimal 2 user, dan 1 merchant terdaftar untuk dapat melakukan transfer antar account
+-Pengguna harus login terlebih dahulu, dan menggunakan Authorization Token ketika mengakses fungsi-fungsi lain, Kecuali Register Account dan Login
+-Setiap kali melakukan transaksi, user harus memasukkin PIN yang di encode secara base64. Gunakan encode64 online, dan di decode ketika request masuk.
+-Saldo ditotalkan dari table History, Saldo selalu diupdate ketika melakukan transaksi.
+-Transaction Type= TOPUP / TRANSFER / PAY
+-Top UP = Menambah saldo (+amount)
+-Transfer = Mengurangi saldo (-amount)
+-Pay = Mengurangi saldo (-amount)
+-Untuk Table VirtualAccountTransaction:
+-Untuk TopUp, description = bankCode + "/" + bankAccountNo
+-Untuk Transfer, description = destAccountNo
+-Untuk Pay, description = merchantAccountNo + "/" + merchantName
+
+
+-Buatkan API Bank terpisah dari API Virtual Account.
+-Setiap kali melakukan TopUp, maka service harus connect ke Bank API yang dibuat dan running terpisah, untuk mem-validasi apakah Saldo Bank Customer tersebut cukup,
+-Jika cukup, maka lanjutkan proses TopUp
+-jika tidak cukup, berikan pesan error
+-untuk connect ke API bank tidak perlu accessToken
+-Buatkan script untuk inisial data BankAccount awal, masing-masing orang 1Milyar
+-Catat transaksi di BankTransaction, summarykan saldo update ke BankAccount
+-Untuk CRUD table transaksi harus menggunakan NoSQL:
+-Table Transaksi Virtual Account (TopUp, Transfer, Pay)
+-Table Transaksi Bank (Bank Transaction)
+
+
+-Postman Collection Export Import
